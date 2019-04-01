@@ -1,0 +1,122 @@
+package CommandLineApplication;
+
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class СalculationOperations {
+
+    private static Boolean typeArabicNumbers;
+
+    public static void setTypeNumbersParam(Scanner scanner){
+        System.out.println("Please check type of numbers(roman/arabic)");
+        String str = scanner.next();
+        if(str.equals("arabic")){
+            typeArabicNumbers = true;
+        }
+        if(str.equals("roman")){
+            typeArabicNumbers = false;
+        }
+        if(str.equals("exit")){
+            return;
+        } else{
+            System.out.println("Please input correct numbers(roman/arabic), or write 'exit' ");
+            setTypeNumbersParam(scanner);
+        }
+    }
+
+    public static void doCalcProcess(Scanner scanner, Boolean continueInput, ArrayList<Double> listOfNumbers, ArrayList<Character> listOfOperations){
+        String str;
+
+        setTypeNumbersParam(scanner);
+        listOfNumbers.add(getIntNumber(scanner, listOfOperations, listOfNumbers));
+        while (true) {
+            continueInput = getOperation(scanner, listOfNumbers, listOfOperations);
+            if (continueInput == false) {
+                break;
+            }
+            listOfNumbers.add(getIntNumber(scanner, listOfOperations, listOfNumbers));
+        }
+        System.out.println("Do you want to continue calculations(yes/no)?");
+        str = scanner.next();
+        if(str.equals("yes")){
+            listOfNumbers.clear();
+            listOfOperations.clear();
+            doCalcProcess(scanner, continueInput, listOfNumbers, listOfOperations);
+        } else{
+            return;
+        }
+    }
+
+
+    private static Double getIntNumber(Scanner scanner, ArrayList<Character> listOfOperations, ArrayList<Double> listOfNumbers) {
+        Double num;
+
+        System.out.println("Input a number: ");
+        if (scanner.hasNextInt()) {
+            num = (double) scanner.nextInt();
+            if (listOfNumbers.size() >=1 && listOfOperations.get(listOfOperations.size() - 1) == '/' && num  == 0 ){
+                System.out.println("Error: there will be division by zero");
+                num = getIntNumber(scanner, listOfOperations, listOfNumbers);
+            }
+        } else {
+            System.out.println("Invalid input, enter integer:");
+            scanner.next();
+            num = getIntNumber(scanner, listOfOperations, listOfNumbers);
+        }
+        return num;
+    }
+
+    private static Boolean getOperation(Scanner scanner, ArrayList<Double> listOfNumbers, ArrayList<Character> listOfOperations) {
+        Boolean continueInput = true;
+        System.out.println("Check the operation type(*,/,+,-), or enter 'end' to complete: ");
+        String str = scanner.next();
+        if (str.equals("end")) {
+            System.out.println("Result: " + returnResult(listOfNumbers, listOfOperations));
+            continueInput = false;
+            return continueInput;
+        } else {
+            if (str.equals("+") || str.equals("-") || str.equals("*") || str.equals("/")) {
+                listOfOperations.add(str.charAt(0));
+            } else {
+                System.out.println("Invalid input");
+                continueInput = getOperation(scanner, listOfNumbers, listOfOperations);
+            }
+        }
+
+        return continueInput;
+    }
+
+    private static Double calc(Double num1, Double num2, Character operation) {
+        Double res = null;
+        switch (operation) {
+            case '+':
+                res = (double) num1 + num2;
+                break;
+            case '-':
+                res = (double) num1 - num2;
+                break;
+            case '*':
+                res = (double) num1 * num2;
+                break;
+            case '/':
+                res = (double) num1 / num2;
+                break;
+        }
+
+        return res;
+    }
+
+    private static Double returnResult(ArrayList<Double> listOfNumbers, ArrayList<Character> listOfOperations) {
+        Double result = listOfNumbers.get(0);
+        for (int i = 0; i < listOfNumbers.size(); i++) {
+            if (i + 1 == listOfNumbers.size()) {
+                return result;
+            }
+            result = calc(result, listOfNumbers.get(i + 1), listOfOperations.get(i));
+
+        }
+
+
+        return result;
+    }
+}
