@@ -12,66 +12,122 @@ public class СalculationOperations {
         String str = scanner.next();
         if(str.equals("arabic")){
             typeArabicNumbers = true;
-        }
-        if(str.equals("roman")){
-            typeArabicNumbers = false;
-        }
-        if(str.equals("exit")){
-            return;
         } else{
-            System.out.println("Please input correct numbers(roman/arabic), or write 'exit' ");
-            setTypeNumbersParam(scanner);
+            if(str.equals("roman")){
+                typeArabicNumbers = false;
+            } else {
+                if(str.equals("exit")){
+                    return;
+                } else{
+                    setTypeNumbersParam(scanner);
+                }
+            }
         }
     }
 
-    public static void doCalcProcess(Scanner scanner, Boolean continueInput, ArrayList<Double> listOfNumbers, ArrayList<Character> listOfOperations){
+    public static void doCalcProcess(Scanner scanner, ArrayList<Double> listOfNumbers, ArrayList<Character> listOfOperations){
         String str;
 
         setTypeNumbersParam(scanner);
-        listOfNumbers.add(getIntNumber(scanner, listOfOperations, listOfNumbers));
+        listOfNumbers.add(getNumber(scanner, listOfOperations, listOfNumbers));
         while (true) {
-            continueInput = getOperation(scanner, listOfNumbers, listOfOperations);
-            if (continueInput == false) {
+            if (getOperation(scanner, listOfNumbers, listOfOperations) == false) {
                 break;
             }
-            listOfNumbers.add(getIntNumber(scanner, listOfOperations, listOfNumbers));
+            listOfNumbers.add(getNumber(scanner, listOfOperations, listOfNumbers));
         }
         System.out.println("Do you want to continue calculations(yes/no)?");
         str = scanner.next();
         if(str.equals("yes")){
             listOfNumbers.clear();
             listOfOperations.clear();
-            doCalcProcess(scanner, continueInput, listOfNumbers, listOfOperations);
+            doCalcProcess(scanner, listOfNumbers, listOfOperations);
         } else{
             return;
         }
     }
 
 
-    private static Double getIntNumber(Scanner scanner, ArrayList<Character> listOfOperations, ArrayList<Double> listOfNumbers) {
-        Double num;
+    private static Double getNumber(Scanner scanner, ArrayList<Character> listOfOperations, ArrayList<Double> listOfNumbers) {
+        Double num = null;
+        Integer number;
 
         System.out.println("Input a number: ");
+        if(typeArabicNumbers == true){
+            num = getNumberArabic(scanner, listOfOperations, listOfNumbers);
+        } else{
+            num = getNumberRoman(scanner, listOfOperations, listOfNumbers);
+        }
+
+        return num;
+    }
+
+    private static Double getNumberArabic(Scanner scanner, ArrayList<Character> listOfOperations, ArrayList<Double> listOfNumbers) {
+        Double num = null;
+        Integer number;
+
         if (scanner.hasNextInt()) {
             num = (double) scanner.nextInt();
             if (listOfNumbers.size() >=1 && listOfOperations.get(listOfOperations.size() - 1) == '/' && num  == 0 ){
                 System.out.println("Error: there will be division by zero");
-                num = getIntNumber(scanner, listOfOperations, listOfNumbers);
+                num = getNumber(scanner, listOfOperations, listOfNumbers);
             }
         } else {
             System.out.println("Invalid input, enter integer:");
             scanner.next();
-            num = getIntNumber(scanner, listOfOperations, listOfNumbers);
+            num = getNumber(scanner, listOfOperations, listOfNumbers);
+        }
+
+
+        return num;
+    }
+
+    private static Double getNumberRoman(Scanner scanner, ArrayList<Character> listOfOperations, ArrayList<Double> listOfNumbers) {
+        Double num = null;
+        String number = null;
+        number = correctNumberRoman(scanner);
+        num = (double) RomanNumber.decode(number);
+        if (listOfNumbers.size() >=1 && listOfOperations.get(listOfOperations.size() - 1) == '/' && num  == 0 ){
+            System.out.println("Error: there will be division by zero");
+            num = getNumber(scanner, listOfOperations, listOfNumbers);
         }
         return num;
+    }
+
+    private static String correctNumberRoman(Scanner scanner){
+        String number = scanner.next();
+        if(number.equals("exit")){
+            System.exit(0);
+        }
+        if (RomanNumber.correctLetters(number.toCharArray())) {
+            if (RomanNumber.checkNumber(number.toCharArray())) {
+                //System.out.println("Number is correct:)");
+            } else {
+                System.out.println("Number is incorrect, please try again or write 'exit' ");
+                correctNumberRoman(scanner);
+            }
+        } else{
+            System.out.println("Number is incorrect, please try again or write 'exit' ");
+            correctNumberRoman(scanner);
+        }
+        return number;
     }
 
     private static Boolean getOperation(Scanner scanner, ArrayList<Double> listOfNumbers, ArrayList<Character> listOfOperations) {
         Boolean continueInput = true;
         System.out.println("Check the operation type(*,/,+,-), or enter 'end' to complete: ");
         String str = scanner.next();
+
         if (str.equals("end")) {
-            System.out.println("Result: " + returnResult(listOfNumbers, listOfOperations));
+            Double returnRes = returnResult(listOfNumbers, listOfOperations);
+            System.out.println("Result in decimal: " + returnRes);
+            if(typeArabicNumbers == false){
+                if(returnRes <= 0){
+                    System.out.println("Result in roman: roman numbers cannot be negative or zero");
+                } else{
+                    System.out.println("Result in roman: " + RomanNumber.toRoman((int)(double)returnResult(listOfNumbers, listOfOperations)));
+                }
+            }
             continueInput = false;
             return continueInput;
         } else {
@@ -88,6 +144,7 @@ public class СalculationOperations {
 
     private static Double calc(Double num1, Double num2, Character operation) {
         Double res = null;
+
         switch (operation) {
             case '+':
                 res = (double) num1 + num2;
